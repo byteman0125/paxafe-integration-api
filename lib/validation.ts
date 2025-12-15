@@ -35,7 +35,7 @@ export const getTiveSchema = (): z.ZodType<any> => {
       Lux: z.number().min(0).nullable().optional(),
     }).nullable().optional(),
     Battery: z.object({
-      Percentage: z.integer().min(0).max(100).nullable().optional(),
+      Percentage: z.number().int().min(0).max(100).nullable().optional(),
       Estimation: z.enum(['N/A', 'Days', 'Weeks', 'Months']).nullable().optional(),
       IsCharging: z.boolean().nullable().optional(),
     }).nullable().optional(),
