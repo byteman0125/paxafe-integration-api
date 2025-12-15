@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TiveEvent {
+  id          String   @id @default(cuid())
+  deviceId    String   @map("device_id")
+  deviceImei  String   @map("device_imei")
+  rawPayload  Json     @map("raw_payload")
+  receivedAt  DateTime @map("received_at") @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  sensorReadings SensorReading[]
+  locations      Location[]
+
+  @@index([deviceId])
+  @@index([deviceImei])
+  @@index([receivedAt])
+  @@map("tive_events")
+}
+
+model SensorReading {
+  id          String    @id @default(cuid())
+  eventId     String    @map("event_id")
+  deviceId    String    @map("device_id")
+  deviceImei  String    @map("device_imei")
+  timestamp   BigInt    @map("timestamp")
+  temperature Float?
+  humidity    Float?
+  lightLevel  Float?    @map("light_level")
+  accelerometer Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  event TiveEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([deviceImei])
+  @@index([timestamp])
+  @@index([eventId])
+  @@map("sensor_readings")
+}
+
+model Location {
+  id                  String    @id @default(cuid())
+  eventId             String    @map("event_id")
+  deviceId            String    @map("device_id")
+  deviceImei          String    @map("device_imei")
+  timestamp           BigInt    @map("timestamp")
+  latitude            Float     @map("latitude")
+  longitude           Float     @map("longitude")
+  locationAccuracy    Int?      @map("location_accuracy")
+  locationSource      String?   @map("location_source")
+  address             Json?     @map("address")
+  batteryLevel        Int?      @map("battery_level")
+  cellularDbm         Float?    @map("cellular_dbm")
+  wifiAccessPoints    Int?      @map("wifi_access_points")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  event TiveEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([deviceImei])
+  @@index([timestamp])
+  @@index([eventId])
+  @@map("locations")
+}
+
