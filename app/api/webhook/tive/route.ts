@@ -9,13 +9,23 @@ function addCorsHeaders(response: NextResponse) {
   response.headers.set('Access-Control-Allow-Origin', '*')
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key')
+  response.headers.set('Access-Control-Max-Age', '86400')
+  response.headers.set('Access-Control-Allow-Credentials', 'false')
   return response
 }
 
 // Handle OPTIONS request for CORS preflight
-export async function OPTIONS() {
-  const response = new NextResponse(null, { status: 204 })
-  return addCorsHeaders(response)
+export async function OPTIONS(request: NextRequest) {
+  const response = new NextResponse(null, { 
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
+      'Access-Control-Max-Age': '86400',
+    }
+  })
+  return response
 }
 
 export async function POST(request: NextRequest) {
