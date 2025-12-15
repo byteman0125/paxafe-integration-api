@@ -124,11 +124,33 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Webhook processing error:', error)
     
-    // Don't expose internal errors
+    // Log detailed error for debugging (only in server logs, not exposed to client)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : String(error)
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      name: error instanceof Error ? error.name : 'Unknown',
+    })
+    
+    // Check for common database errors
+    if (errorMessage.includes('P1001') || errorMessage.includes('Can\'t reach database')) {
+      console.error('Database connection error - check DATABASE_URL environment variable')
+    }
+    if (errorMessage.includes('P2002') || errorMessage.includes('Unique constraint')) {
+      console.error('Database constraint error')
+    }
+    if (errorMessage.includes('does not exist') || errorMessage.includes('relation')) {
+      console.error('Database table missing - run Prisma migrations')
+    }
+    
+    // Don't expose internal errors to client, but log them for debugging
     const response = NextResponse.json(
       { 
         error: 'Internal Server Error', 
-        message: 'An error occurred while processing the webhook' 
+        message: 'An error occurred while processing the webhook',
+        // In development, you might want to expose more details
+        ...(process.env.NODE_ENV === 'development' && { details: errorMessage })
       },
       { status: 500 }
     )
