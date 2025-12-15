@@ -9,12 +9,13 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // Helper function to add CORS headers
-function addCorsHeaders(response: NextResponse) {
-  response.headers.set('Access-Control-Allow-Origin', '*')
+function addCorsHeaders(response: NextResponse, origin?: string | null) {
+  response.headers.set('Access-Control-Allow-Origin', origin || '*')
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key')
   response.headers.set('Access-Control-Max-Age', '86400')
   response.headers.set('Access-Control-Allow-Credentials', 'false')
+  response.headers.set('Vary', 'Origin')
   return response
 }
 
@@ -41,6 +42,8 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get('origin')
+  
   try {
     // Authentication
     const apiKey = getApiKeyFromRequest(request.headers)
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized', message: 'Invalid or missing API key' },
         { status: 401 }
       )
-      return addCorsHeaders(response)
+      return addCorsHeaders(response, origin)
     }
 
     // Parse and validate payload
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
         { error: 'Bad Request', message: 'Invalid JSON payload' },
         { status: 400 }
       )
-      return addCorsHeaders(response)
+      return addCorsHeaders(response, origin)
     }
 
     const schema = getTiveSchema()
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       )
-      return addCorsHeaders(response)
+      return addCorsHeaders(response, origin)
     }
 
     const payload = validationResult.data
@@ -86,7 +89,7 @@ export async function POST(request: NextRequest) {
     const locationData = transformToLocation(payload)
 
     // Store in database (transaction for atomicity)
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Store raw event
       const event = await tx.tiveEvent.create({
         data: {
@@ -142,7 +145,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     )
-    return addCorsHeaders(response)
+    return addCorsHeaders(response, origin)
   } catch (error) {
     console.error('Webhook processing error:', error)
     
@@ -176,13 +179,14 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     )
-    return addCorsHeaders(response)
+    return addCorsHeaders(response, origin)
   }
 }
 
 // Health check endpoint
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const origin = request.headers.get('origin')
   const response = NextResponse.json({ status: 'ok', service: 'paxafe-integration-api' })
-  return addCorsHeaders(response)
+  return addCorsHeaders(response, origin)
 }
 
