@@ -4,15 +4,30 @@ import { transformToSensor, transformToLocation } from '@/lib/transform'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Helper function to add CORS headers
+function addCorsHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key')
+  return response
+}
+
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 })
+  return addCorsHeaders(response)
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Authentication
     const apiKey = getApiKeyFromRequest(request.headers)
     if (!validateApiKey(apiKey)) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Unauthorized', message: 'Invalid or missing API key' },
         { status: 401 }
       )
+      return addCorsHeaders(response)
     }
 
     // Parse and validate payload
@@ -20,17 +35,18 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json()
     } catch (error) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Bad Request', message: 'Invalid JSON payload' },
         { status: 400 }
       )
+      return addCorsHeaders(response)
     }
 
     const schema = getTiveSchema()
     const validationResult = schema.safeParse(body)
 
     if (!validationResult.success) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { 
           error: 'Validation Error', 
           message: 'Payload does not match Tive schema',
@@ -38,6 +54,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       )
+      return addCorsHeaders(response)
     }
 
     const payload = validationResult.data
@@ -93,7 +110,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Return success response
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         message: 'Payload processed successfully',
@@ -103,22 +120,25 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     )
+    return addCorsHeaders(response)
   } catch (error) {
     console.error('Webhook processing error:', error)
     
     // Don't expose internal errors
-    return NextResponse.json(
+    const response = NextResponse.json(
       { 
         error: 'Internal Server Error', 
         message: 'An error occurred while processing the webhook' 
       },
       { status: 500 }
     )
+    return addCorsHeaders(response)
   }
 }
 
 // Health check endpoint
 export async function GET() {
-  return NextResponse.json({ status: 'ok', service: 'paxafe-integration-api' })
+  const response = NextResponse.json({ status: 'ok', service: 'paxafe-integration-api' })
+  return addCorsHeaders(response)
 }
 
