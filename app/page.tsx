@@ -1,17 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Copy, Check, Eye, EyeOff } from 'lucide-react'
 
 export default function Home() {
   const [copiedEndpoint, setCopiedEndpoint] = useState(false)
   const [copiedApiKey, setCopiedApiKey] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
+  const [apiEndpoint, setApiEndpoint] = useState('/api/webhook/tive')
 
-  // Get current URL for the API endpoint
-  const apiEndpoint = typeof window !== 'undefined' 
-    ? `${window.location.origin}/api/webhook/tive`
-    : '/api/webhook/tive'
+  // Get current URL for the API endpoint (client-side only to avoid hydration mismatch)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setApiEndpoint(`${window.location.origin}/api/webhook/tive`)
+    }
+  }, [])
 
   // Get API key from environment (client-side, so we'll need to handle this carefully)
   // Note: API key should ideally come from a server-side API route for security
