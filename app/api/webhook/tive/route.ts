@@ -32,6 +32,10 @@ export async function OPTIONS(request: NextRequest) {
       'Access-Control-Max-Age': '86400',
       'Access-Control-Allow-Credentials': 'false',
       'Vary': 'Origin',
+      // CRITICAL: Prevent caching of OPTIONS responses - Vercel was caching and returning 304
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
     }
   })
 }
