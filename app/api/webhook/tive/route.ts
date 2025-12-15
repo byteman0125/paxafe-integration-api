@@ -15,14 +15,17 @@ function addCorsHeaders(response: NextResponse) {
 }
 
 // Handle OPTIONS request for CORS preflight
+// Note: Middleware should handle this, but keeping as fallback
 export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin')
   const response = new NextResponse(null, { 
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
       'Access-Control-Max-Age': '86400',
+      'Access-Control-Allow-Credentials': 'false',
     }
   })
   return response
