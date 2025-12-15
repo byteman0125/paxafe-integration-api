@@ -4,6 +4,10 @@ import { transformToSensor, transformToLocation } from '@/lib/transform'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Route segment config for CORS
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 // Helper function to add CORS headers
 function addCorsHeaders(response: NextResponse) {
   response.headers.set('Access-Control-Allow-Origin', '*')
@@ -15,20 +19,21 @@ function addCorsHeaders(response: NextResponse) {
 }
 
 // Handle OPTIONS request for CORS preflight
-// Note: Middleware should handle this, but keeping as fallback
+// This MUST be handled here for Vercel serverless functions
 export async function OPTIONS(request: NextRequest) {
-  const origin = request.headers.get('origin')
-  const response = new NextResponse(null, { 
+  const origin = request.headers.get('origin') || '*'
+  
+  return new NextResponse(null, { 
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': origin || '*',
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
       'Access-Control-Max-Age': '86400',
       'Access-Control-Allow-Credentials': 'false',
+      'Vary': 'Origin',
     }
   })
-  return response
 }
 
 export async function POST(request: NextRequest) {
