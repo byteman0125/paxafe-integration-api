@@ -26,18 +26,10 @@
         {
           "key": "Vary",
           "value": "Origin"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/webhook/tive",
-      "destination": "/api/webhook/tive",
-      "has": [
+        },
         {
-          "type": "method",
-          "value": "OPTIONS"
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, max-age=0"
         }
       ]
     }
