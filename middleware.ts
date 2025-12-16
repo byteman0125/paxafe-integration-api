@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Use Edge Runtime for better Vercel compatibility
+export const runtime = 'edge'
+
 export function middleware(request: NextRequest) {
   // Get the origin from the request
   const origin = request.headers.get('origin') || '*'

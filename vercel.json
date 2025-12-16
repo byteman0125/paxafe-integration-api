@@ -2,6 +2,45 @@
   "buildCommand": "prisma generate && next build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-API-Key"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        },
+        {
+          "key": "Vary",
+          "value": "Origin"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/webhook/tive",
+      "destination": "/api/webhook/tive",
+      "has": [
+        {
+          "type": "method",
+          "value": "OPTIONS"
+        }
+      ]
+    }
+  ]
 }
 

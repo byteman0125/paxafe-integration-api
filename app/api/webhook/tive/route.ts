@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma'
 // Route segment config for CORS
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+// Ensure OPTIONS requests are not cached
+export const revalidate = 0
 
 // Helper function to add CORS headers
 function addCorsHeaders(response: NextResponse, origin?: string | null) {
@@ -21,24 +23,33 @@ function addCorsHeaders(response: NextResponse, origin?: string | null) {
 
 // Handle OPTIONS request for CORS preflight
 // This MUST be handled here for Vercel serverless functions
+// Vercel sometimes doesn't execute middleware for API routes, so this is critical
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get('origin') || '*'
   
-  return new NextResponse(null, { 
+  // Log for debugging on Vercel
+  console.log('[OPTIONS] CORS preflight request from origin:', origin)
+  
+  const response = new NextResponse(null, { 
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
-      'Access-Control-Max-Age': '86400',
-      'Access-Control-Allow-Credentials': 'false',
-      'Vary': 'Origin',
-      // CRITICAL: Prevent caching of OPTIONS responses - Vercel was caching and returning 304
-      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    }
   })
+  
+  // Set headers individually to ensure they're set correctly
+  response.headers.set('Access-Control-Allow-Origin', origin)
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key')
+  response.headers.set('Access-Control-Max-Age', '86400')
+  response.headers.set('Access-Control-Allow-Credentials', 'false')
+  response.headers.set('Vary', 'Origin')
+  // CRITICAL: Prevent caching - Vercel was caching OPTIONS and returning 304 without headers
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, private')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  
+  console.log('[OPTIONS] Response headers set:', Object.fromEntries(response.headers.entries()))
+  
+  return response
 }
 
 export async function POST(request: NextRequest) {
