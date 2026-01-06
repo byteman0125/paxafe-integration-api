@@ -93,7 +93,32 @@ export async function POST(request: NextRequest) {
       return addCorsHeaders(response, origin)
     }
 
+
     const payload = validationResult.data
+
+    const existingEvent = await prisma.tiveEvent.findFrist({
+      where: {
+        deviceImei: payload.DeviceId,
+        receivedAt: {
+          gte: new Date(Number(payload.EntryTimeEpoch) - 1000),
+          lte: new Date(Number(payload.EntryTimeEpoch) + 1000),
+        }
+      }
+    })
+
+    if (existingEvent) {
+      const response = NextResponse.json(
+        {
+          error: 'Duplicate',
+          message: 'Duplicate payload detected - same device and timestamp'
+        },
+        {
+          status: 409
+        }
+      )
+      return addCorsHeaders(response, origin);
+    }
+  
 
     // Transform to PAXAFE formats
     const sensorData = transformToSensor(payload)
