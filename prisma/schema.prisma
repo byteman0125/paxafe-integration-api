@@ -45,6 +45,7 @@ model SensorReading {
   @@index([deviceImei])
   @@index([timestamp])
   @@index([eventId])
+  @@unique([deviceImei, timestamp])
   @@map("sensor_readings")
 }
 

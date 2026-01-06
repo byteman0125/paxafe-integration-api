@@ -111,18 +111,26 @@ export async function POST(request: NextRequest) {
       })
 
       // Store transformed sensor reading
-      const sensor = await tx.sensorReading.create({
-        data: {
-          eventId: event.id,
-          deviceId: sensorData.device_id,
-          deviceImei: sensorData.device_imei,
-          timestamp: BigInt(sensorData.timestamp),
-          temperature: sensorData.temperature,
-          humidity: sensorData.humidity,
-          lightLevel: sensorData.light_level,
-          accelerometer: sensorData.accelerometer as any,
-        },
-      })
+      let sensor;
+      try{
+          sensor = await tx.sensorReading.create({
+          data: {
+            eventId: event.id,
+            deviceId: sensorData.device_id,
+            deviceImei: sensorData.device_imei,
+            timestamp: BigInt(sensorData.timestamp),
+            temperature: sensorData.temperature,
+            humidity: sensorData.humidity,
+            lightLevel: sensorData.light_level,
+            accelerometer: sensorData.accelerometer as any,
+          },
+        })
+      } catch (err: any){
+        if(err.code === 'P2002') {
+          throw new Error('Duplicate_Sensor_Reading');
+        }
+      }
+      
 
       // Store transformed location
       const location = await tx.location.create({
