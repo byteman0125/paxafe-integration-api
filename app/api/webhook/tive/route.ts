@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     const payload = validationResult.data
 
-    const existingEvent = await prisma.tiveEvent.findFrist({
+    const existingEvent = await prisma.tiveEvent.findFirst({
       where: {
         deviceImei: payload.DeviceId,
         receivedAt: {
